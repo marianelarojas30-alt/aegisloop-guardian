@@ -1,0 +1,4 @@
+Synthetic macro lure test file.
+Please enable content to view this overdue invoice.
+This text includes vbaProject.bin and AutoOpen as safe test indicators.
+PowerShell -EncodedCommand AAAA

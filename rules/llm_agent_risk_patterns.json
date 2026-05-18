@@ -1,0 +1,84 @@
+{
+  "patterns": [
+    {
+      "id": "LLM-001",
+      "label": "Ignore previous instructions",
+      "pattern": "ignore previous instructions",
+      "severity": "high",
+      "category": "prompt_injection",
+      "reason": "Classic prompt-injection marker."
+    },
+    {
+      "id": "LLM-002",
+      "label": "Reveal system prompt",
+      "pattern": "reveal the system prompt",
+      "severity": "high",
+      "category": "prompt_injection",
+      "reason": "Attempts to expose hidden system instructions."
+    },
+    {
+      "id": "LLM-003",
+      "label": "Memory poisoning marker",
+      "pattern": "remember that",
+      "severity": "medium",
+      "category": "memory_poisoning",
+      "reason": "Memory updates should be treated carefully when found in untrusted content."
+    },
+    {
+      "id": "LLM-004",
+      "label": "Email tool request",
+      "pattern": "send_email",
+      "severity": "high",
+      "category": "unsafe_tool_use",
+      "reason": "Email-sending requests embedded in content may signal unsafe tool-use attempts."
+    },
+    {
+      "id": "LLM-005",
+      "label": "Webhook call request",
+      "pattern": "call_webhook",
+      "severity": "high",
+      "category": "unsafe_tool_use",
+      "reason": "Webhook calls should not be triggered by untrusted content."
+    },
+    {
+      "id": "LLM-006",
+      "label": "System override marker",
+      "pattern": "system override",
+      "severity": "high",
+      "category": "context_poisoning",
+      "reason": "Retrieved context should not override trusted instructions."
+    },
+    {
+      "id": "LLM-007",
+      "label": "Fake authority marker",
+      "pattern": "as the administrator",
+      "severity": "medium",
+      "category": "fake_authority",
+      "reason": "Fake authority claims can manipulate agents into unsafe actions."
+    },
+    {
+      "id": "LLM-008",
+      "label": "Developer mode jailbreak marker",
+      "pattern": "developer mode",
+      "severity": "medium",
+      "category": "jailbreak_attempt",
+      "reason": "Developer-mode language is often used in jailbreak attempts."
+    },
+    {
+      "id": "LLM-009",
+      "label": "Tool permission bypass marker",
+      "pattern": "no confirmation needed",
+      "severity": "high",
+      "category": "confirmation_bypass",
+      "reason": "Attempts to bypass confirmation gates can lead to unsafe agent behavior."
+    },
+    {
+      "id": "LLM-010",
+      "label": "Agent-to-agent fake delegation",
+      "pattern": "another agent told me",
+      "severity": "medium",
+      "category": "inter_agent_boundary",
+      "reason": "Agent messages should not automatically override user intent or policy."
+    }
+  ]
+}

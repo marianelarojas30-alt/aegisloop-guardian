@@ -1,0 +1,16 @@
+{
+  "metadata": {
+    "purpose": "Local known-bad hash denylist for defensive scanning.",
+    "note": "Starter file contains only synthetic test hashes. Add real IOCs only from trusted threat-intelligence sources."
+  },
+  "sha256": [
+    {
+      "hash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "label": "Synthetic placeholder hash",
+      "severity": "critical",
+      "source": "local-test"
+    }
+  ],
+  "sha1": [],
+  "md5": []
+}

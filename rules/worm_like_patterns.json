@@ -1,0 +1,68 @@
+{
+  "patterns": [
+    {
+      "id": "WORM-001",
+      "label": "Self-copy behavior",
+      "pattern": "shutil.copy(__file__",
+      "severity": "critical",
+      "category": "worm_like_behavior",
+      "reason": "Self-copying code may indicate propagation behavior."
+    },
+    {
+      "id": "WORM-002",
+      "label": "Startup persistence path",
+      "pattern": "LaunchAgents",
+      "severity": "high",
+      "category": "persistence",
+      "reason": "Startup persistence locations should be reviewed."
+    },
+    {
+      "id": "WORM-003",
+      "label": "Cron persistence",
+      "pattern": "crontab",
+      "severity": "high",
+      "category": "persistence",
+      "reason": "Cron modifications may indicate persistence."
+    },
+    {
+      "id": "WORM-004",
+      "label": "Mass file traversal",
+      "pattern": "os.walk",
+      "severity": "medium",
+      "category": "mass_file_access",
+      "reason": "Mass file traversal can be legitimate but may indicate scanning or propagation."
+    },
+    {
+      "id": "WORM-005",
+      "label": "Remote command download",
+      "pattern": "wget",
+      "severity": "medium",
+      "category": "download_execution",
+      "reason": "Remote downloads should be reviewed before execution."
+    },
+    {
+      "id": "WORM-006",
+      "label": "Socket network code",
+      "pattern": "socket.socket",
+      "severity": "medium",
+      "category": "network_activity",
+      "reason": "Raw socket use should be reviewed in untrusted code."
+    },
+    {
+      "id": "WORM-007",
+      "label": "SSH key access",
+      "pattern": ".ssh",
+      "severity": "high",
+      "category": "credential_access",
+      "reason": "Access to SSH keys can indicate credential harvesting."
+    },
+    {
+      "id": "WORM-008",
+      "label": "Browser credential path",
+      "pattern": "Login Data",
+      "severity": "critical",
+      "category": "credential_access",
+      "reason": "Browser credential stores should not be accessed by unknown scripts."
+    }
+  ]
+}

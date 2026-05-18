@@ -1,0 +1,19 @@
+{
+  "metadata": {
+    "project": "AegisLoop Guardian",
+    "version": "0.2.0",
+    "purpose": "Defensive local scanning rules for suspicious files, fraud indicators, and AI-agent workspace content."
+  },
+  "severity_weights": {
+    "low": 1,
+    "medium": 3,
+    "high": 7,
+    "critical": 12
+  },
+  "risk_thresholds": {
+    "low": 1,
+    "medium": 5,
+    "high": 12,
+    "critical": 22
+  }
+}

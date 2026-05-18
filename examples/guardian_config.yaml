@@ -1,0 +1,27 @@
+scan:
+  max_file_size_kb: 512
+  allowed_extensions:
+    - .txt
+    - .md
+    - .py
+    - .sh
+    - .json
+    - .yaml
+    - .yml
+    - .csv
+    - .log
+
+watch:
+  interval_seconds: 5
+
+behavior:
+  delete_files: false
+  execute_files: false
+  upload_results: false
+  quarantine_automatically: false
+
+explanation:
+  enabled: false
+  provider: none   # none | ollama | anthropic | openai | gemini
+  model: qwen2.5:7b
+  openai_base_url: null

@@ -1,0 +1,44 @@
+{
+  "patterns": [
+    {
+      "id": "DOC-001",
+      "label": "Office macro marker",
+      "pattern": "vbaProject.bin",
+      "severity": "high",
+      "category": "document_macro_risk",
+      "reason": "Office files containing VBA projects can contain macros and should be reviewed."
+    },
+    {
+      "id": "DOC-002",
+      "label": "AutoOpen macro marker",
+      "pattern": "AutoOpen",
+      "severity": "high",
+      "category": "document_macro_risk",
+      "reason": "AutoOpen macros can run when a document opens."
+    },
+    {
+      "id": "DOC-003",
+      "label": "PowerShell encoded command",
+      "pattern": "-EncodedCommand",
+      "severity": "critical",
+      "category": "script_obfuscation",
+      "reason": "Encoded PowerShell commands are frequently used to hide behavior."
+    },
+    {
+      "id": "DOC-004",
+      "label": "Invoice payment lure",
+      "pattern": "overdue invoice",
+      "severity": "medium",
+      "category": "phishing_lure",
+      "reason": "Invoice-themed urgency can be used in phishing and business email compromise."
+    },
+    {
+      "id": "DOC-005",
+      "label": "Enable content lure",
+      "pattern": "enable content",
+      "severity": "high",
+      "category": "document_macro_risk",
+      "reason": "Requests to enable content or macros are common malicious document lures."
+    }
+  ]
+}

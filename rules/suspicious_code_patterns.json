@@ -1,0 +1,84 @@
+{
+  "patterns": [
+    {
+      "id": "CODE-001",
+      "label": "Base64 decoding",
+      "pattern": "base64.b64decode",
+      "severity": "medium",
+      "category": "obfuscation",
+      "reason": "Base64 decoding can be legitimate but may hide payloads."
+    },
+    {
+      "id": "CODE-002",
+      "label": "Subprocess usage",
+      "pattern": "subprocess",
+      "severity": "high",
+      "category": "code_execution",
+      "reason": "Subprocess can execute system commands and should be reviewed."
+    },
+    {
+      "id": "CODE-003",
+      "label": "Eval usage",
+      "pattern": "eval(",
+      "severity": "high",
+      "category": "code_execution",
+      "reason": "Eval can execute dynamic code and may be dangerous."
+    },
+    {
+      "id": "CODE-004",
+      "label": "Environment variable access",
+      "pattern": "os.environ",
+      "severity": "medium",
+      "category": "credential_access",
+      "reason": "Environment variables may contain secrets or tokens."
+    },
+    {
+      "id": "CODE-005",
+      "label": "Curl usage",
+      "pattern": "curl",
+      "severity": "medium",
+      "category": "download_execution",
+      "reason": "Downloads followed by execution can be risky and should be reviewed."
+    },
+    {
+      "id": "CODE-006",
+      "label": "Recursive deletion command",
+      "pattern": "rm -rf",
+      "severity": "critical",
+      "category": "destructive_command",
+      "reason": "Recursive deletion can cause data loss."
+    },
+    {
+      "id": "CODE-007",
+      "label": "Credential keyword",
+      "pattern": "password",
+      "severity": "medium",
+      "category": "credential_access",
+      "reason": "Credential-like terms should be reviewed."
+    },
+    {
+      "id": "CODE-008",
+      "label": "Private key marker",
+      "pattern": "BEGIN PRIVATE KEY",
+      "severity": "critical",
+      "category": "secret_exposure",
+      "reason": "Private keys should not be stored in plain text."
+    },
+    {
+      "id": "CODE-009",
+      "label": "Network request library",
+      "pattern": "requests.post",
+      "severity": "medium",
+      "category": "network_activity",
+      "reason": "Outbound network activity should be reviewed in untrusted scripts."
+    },
+    {
+      "id": "CODE-010",
+      "label": "Shell execution",
+      "pattern": "shell=True",
+      "severity": "high",
+      "category": "code_execution",
+      "reason": "Shell execution increases command injection risk."
+    }
+  ]
+}

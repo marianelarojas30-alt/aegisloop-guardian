@@ -1,0 +1,68 @@
+{
+  "patterns": [
+    {
+      "id": "FRAUD-001",
+      "label": "Wire transfer request",
+      "pattern": "wire transfer",
+      "severity": "high",
+      "category": "financial_fraud",
+      "reason": "Wire-transfer instructions should be verified through a trusted channel."
+    },
+    {
+      "id": "FRAUD-002",
+      "label": "Bank account change",
+      "pattern": "change bank account",
+      "severity": "critical",
+      "category": "payment_redirection",
+      "reason": "Bank account change requests are common payment-redirection fraud indicators."
+    },
+    {
+      "id": "FRAUD-003",
+      "label": "Gift card request",
+      "pattern": "gift card",
+      "severity": "high",
+      "category": "financial_fraud",
+      "reason": "Gift card requests are common fraud indicators."
+    },
+    {
+      "id": "FRAUD-004",
+      "label": "Crypto wallet request",
+      "pattern": "crypto wallet",
+      "severity": "high",
+      "category": "financial_fraud",
+      "reason": "Crypto payment requests may indicate scam or fraud risk."
+    },
+    {
+      "id": "FRAUD-005",
+      "label": "Urgency pressure",
+      "pattern": "immediately",
+      "severity": "medium",
+      "category": "social_engineering",
+      "reason": "Urgency pressure is common in phishing and payment fraud."
+    },
+    {
+      "id": "FRAUD-006",
+      "label": "Secrecy pressure",
+      "pattern": "do not tell anyone",
+      "severity": "high",
+      "category": "business_email_compromise",
+      "reason": "Secrecy pressure can indicate executive impersonation or BEC."
+    },
+    {
+      "id": "FRAUD-007",
+      "label": "Vendor payment update",
+      "pattern": "update vendor payment",
+      "severity": "critical",
+      "category": "payment_redirection",
+      "reason": "Vendor payment changes should be independently verified."
+    },
+    {
+      "id": "FRAUD-008",
+      "label": "Payroll diversion",
+      "pattern": "update my direct deposit",
+      "severity": "critical",
+      "category": "payroll_diversion",
+      "reason": "Direct-deposit changes require strong identity verification."
+    }
+  ]
+}
