@@ -14,10 +14,16 @@ def collect_files(root_path: Path, max_size_kb: int = 512) -> List[Path]:
     if not root_path.exists():
         raise FileNotFoundError(f"Path does not exist: {root_path}")
 
+    if root_path.is_symlink():
+        raise ValueError(f"Refusing to scan symlink root: {root_path}")
+
     if root_path.is_file():
         candidates = [root_path]
     else:
-        candidates = [p for p in root_path.rglob("*") if p.is_file()]
+        candidates = [
+            p for p in root_path.rglob("*")
+            if not p.is_symlink() and p.is_file()
+        ]
 
     files = []
     for path in candidates:
