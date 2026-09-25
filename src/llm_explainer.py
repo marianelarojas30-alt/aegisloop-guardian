@@ -5,6 +5,13 @@ import json
 import os
 import requests
 
+DEFAULT_MODELS = {
+    "ollama": "qwen3.5:4b",
+    "anthropic": "claude-haiku-4-5-20251001",
+    "openai": "gpt-6-luna",
+    "gemini": "gemini-3.8-flash",
+}
+
 def _build_prompt(findings: List[Dict[str, Any]]) -> str:
     compact = [
         {
@@ -66,20 +73,20 @@ def explain_findings(
     prompt = _build_prompt(findings)
 
     if provider == "ollama":
-        return _explain_with_ollama(prompt, model or "qwen2.5:7b")
+        return _explain_with_ollama(prompt, model or DEFAULT_MODELS["ollama"])
 
     if provider == "anthropic":
-        return _explain_with_anthropic(prompt, model or "claude-3-5-haiku-latest")
+        return _explain_with_anthropic(prompt, model or DEFAULT_MODELS["anthropic"])
 
     if provider == "openai":
         return _explain_with_openai_compatible(
             prompt,
-            model or "gpt-4o-mini",
+            model or DEFAULT_MODELS["openai"],
             openai_base_url or "https://api.openai.com/v1/chat/completions"
         )
 
     if provider == "gemini":
-        return _explain_with_gemini(prompt, model or "gemini-1.5-flash")
+        return _explain_with_gemini(prompt, model or DEFAULT_MODELS["gemini"])
 
     return f"Unsupported explanation provider: {provider}"
 
