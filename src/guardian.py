@@ -49,7 +49,7 @@ def _remote_explanation_requested(provider: str, openai_base_url: str | None) ->
     return False
 
 
-def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str = "qwen2.5:7b", openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False, allow_remote_llm: bool = False, files_override=None):
+def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str | None = None, openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False, allow_remote_llm: bool = False, files_override=None):
     target = Path(path)
     if not target.is_absolute():
         target = ROOT / target
@@ -116,7 +116,7 @@ def main():
     parser.add_argument("--path", default="watched_folder", help="File or folder to scan.")
     parser.add_argument("--max-size-kb", type=int, default=512, help="Maximum file size to scan.")
     parser.add_argument("--explain-provider", default="none", choices=["none", "ollama", "anthropic", "openai", "gemini"], help="Optional LLM provider for explaining findings.")
-    parser.add_argument("--model", default="qwen2.5:7b", help="Model name for optional explanation provider.")
+    parser.add_argument("--model", default=None, help="Optional model override. If omitted, the selected provider uses its current safe default.")
     parser.add_argument("--openai-base-url", default=None, help="Optional OpenAI-compatible chat completions endpoint.")
     parser.add_argument(
         "--allow-remote-llm",
