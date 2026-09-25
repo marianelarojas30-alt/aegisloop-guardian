@@ -33,7 +33,24 @@ def load_rules():
         all_rules.extend(data.get("patterns", []))
     return all_rules
 
-def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str = "qwen2.5:7b", openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False):
+def _remote_explanation_requested(provider: str, openai_base_url: str | None) -> bool:
+    provider = (provider or "none").lower().strip()
+    if provider in {"anthropic", "gemini"}:
+        return True
+    if provider == "openai":
+        endpoint = (openai_base_url or "https://api.openai.com").lower()
+        return not (
+            endpoint.startswith("http://127.0.0.1")
+            or endpoint.startswith("http://localhost")
+            or endpoint.startswith("http://[::1]")
+            or endpoint.startswith("https://127.0.0.1")
+            or endpoint.startswith("https://localhost")
+            or endpoint.startswith("https://[::1]")
+        )
+    return False
+
+
+def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str = "qwen2.5:7b", openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False, allow_remote_llm: bool = False):
     target = Path(path)
     if not target.is_absolute():
         target = ROOT / target
@@ -61,6 +78,13 @@ def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", 
         quarantine_results = quarantine_flagged_files(findings, ROOT / "quarantine")
 
     llm_explanation = None
+    if _remote_explanation_requested(explain_provider, openai_base_url) and not allow_remote_llm:
+        raise ValueError(
+            "Remote LLM explanation is blocked by default because findings may leave this computer. "
+            "Use --allow-remote-llm only if you intentionally consent to sending the compact finding data "
+            "to the selected provider."
+        )
+
     if explain_provider and explain_provider != "none" and findings:
         llm_explanation = explain_findings(
             findings,
@@ -95,6 +119,11 @@ def main():
     parser.add_argument("--explain-provider", default="none", choices=["none", "ollama", "anthropic", "openai", "gemini"], help="Optional LLM provider for explaining findings.")
     parser.add_argument("--model", default="qwen2.5:7b", help="Model name for optional explanation provider.")
     parser.add_argument("--openai-base-url", default=None, help="Optional OpenAI-compatible chat completions endpoint.")
+    parser.add_argument(
+        "--allow-remote-llm",
+        action="store_true",
+        help="Explicitly allow scanner finding summaries to be sent to a remote LLM provider.",
+    )
     parser.add_argument("--enable-av-checks", action="store_true", help="Enable antivirus-style static checks: hashes, entropy, file type, optional ClamAV.")
     parser.add_argument("--use-clamav", action="store_true", help="Use ClamAV if clamscan is installed.")
     parser.add_argument("--quarantine", action="store_true", help="Copy flagged files into quarantine/ for manual review. Does not delete originals.")
@@ -112,7 +141,8 @@ def main():
         use_clamav=args.use_clamav,
         quarantine=args.quarantine,
         build_baseline_flag=args.build_baseline,
-        compare_baseline=args.compare_baseline
+        compare_baseline=args.compare_baseline,
+        allow_remote_llm=args.allow_remote_llm
     )
 
     print("AegisLoop Guardian scan complete.")
