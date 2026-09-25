@@ -157,23 +157,28 @@ def _explain_with_openai_compatible(prompt: str, model: str, base_url: str) -> s
             host = ""
         if host in {"127.0.0.1", "localhost", "::1"}:
             session.trust_env = False
+        payload = {
+            "model": model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a defensive cybersecurity assistant. Do not provide offensive instructions."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+        }
+        if model.lower().startswith("gpt-6"):
+            payload["reasoning_effort"] = "none"
+        else:
+            payload["temperature"] = 0
+
         response = session.post(
             base_url,
             headers=headers,
-            json={
-                "model": model,
-                "temperature": 0,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are a defensive cybersecurity assistant. Do not provide offensive instructions."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-            },
+            json=payload,
             timeout=180
         )
         response.raise_for_status()
