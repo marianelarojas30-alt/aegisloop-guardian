@@ -1,6 +1,7 @@
 import argparse
 import json
 from pathlib import Path
+from urllib.parse import urlparse
 
 from file_collector import collect_files
 from static_scanner import scan_file
@@ -38,15 +39,13 @@ def _remote_explanation_requested(provider: str, openai_base_url: str | None) ->
     if provider in {"anthropic", "gemini"}:
         return True
     if provider == "openai":
-        endpoint = (openai_base_url or "https://api.openai.com").lower()
-        return not (
-            endpoint.startswith("http://127.0.0.1")
-            or endpoint.startswith("http://localhost")
-            or endpoint.startswith("http://[::1]")
-            or endpoint.startswith("https://127.0.0.1")
-            or endpoint.startswith("https://localhost")
-            or endpoint.startswith("https://[::1]")
-        )
+        endpoint = openai_base_url or "https://api.openai.com"
+        try:
+            parsed = urlparse(endpoint)
+        except ValueError:
+            return True
+        host = (parsed.hostname or "").lower()
+        return host not in {"127.0.0.1", "localhost", "::1"}
     return False
 
 
