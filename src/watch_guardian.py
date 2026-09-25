@@ -45,7 +45,8 @@ def main():
                         enable_av_checks=args.enable_av_checks,
                         use_clamav=args.use_clamav,
                         quarantine=args.quarantine,
-                        compare_baseline=args.compare_baseline
+                        compare_baseline=args.compare_baseline,
+                        files_override=files
                     )
                     print(f"Risk level: {result['score']['risk_level']} | Findings: {result['score']['finding_count']}")
                     previous = current
