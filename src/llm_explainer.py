@@ -1,4 +1,6 @@
 from typing import List, Dict, Any, Optional
+from pathlib import Path
+from urllib.parse import urlparse
 import json
 import os
 import requests
@@ -12,7 +14,7 @@ def _build_prompt(findings: List[Dict[str, Any]]) -> str:
             "category": f.get("category"),
             "reason": f.get("reason"),
             "matched_pattern": f.get("matched_pattern"),
-            "file": f.get("file")
+            "file": Path(str(f.get("file") or "")).name
         }
         for f in findings[:25]
     ]
@@ -84,8 +86,10 @@ def explain_findings(
 
 def _explain_with_ollama(prompt: str, model: str) -> str:
     try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
+        session = requests.Session()
+        session.trust_env = False
+        response = session.post(
+            "http://127.0.0.1:11434/api/generate",
             json={
                 "model": model,
                 "prompt": prompt,
@@ -139,7 +143,14 @@ def _explain_with_openai_compatible(prompt: str, model: str, base_url: str) -> s
         headers["authorization"] = f"Bearer {api_key}"
 
     try:
-        response = requests.post(
+        session = requests.Session()
+        try:
+            host = (urlparse(base_url).hostname or "").lower()
+        except ValueError:
+            host = ""
+        if host in {"127.0.0.1", "localhost", "::1"}:
+            session.trust_env = False
+        response = session.post(
             base_url,
             headers=headers,
             json={
