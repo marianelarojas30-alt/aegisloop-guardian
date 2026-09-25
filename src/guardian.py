@@ -49,13 +49,13 @@ def _remote_explanation_requested(provider: str, openai_base_url: str | None) ->
     return False
 
 
-def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str = "qwen2.5:7b", openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False, allow_remote_llm: bool = False):
+def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str = "qwen2.5:7b", openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False, allow_remote_llm: bool = False, files_override=None):
     target = Path(path)
     if not target.is_absolute():
         target = ROOT / target
 
     rules = load_rules()
-    files = collect_files(target, max_size_kb=max_size_kb)
+    files = list(files_override) if files_override is not None else collect_files(target, max_size_kb=max_size_kb)
 
     findings = []
     for file_path in files:
