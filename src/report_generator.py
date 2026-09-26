@@ -59,14 +59,14 @@ def generate_report(
     lines.append("")
 
     if llm_explanation:
-        lines.append("## Optional Local LLM Explanation")
+        lines.append("## Optional LLM Explanation")
         lines.append("")
         lines.append(llm_explanation)
         lines.append("")
 
     lines.append("## Safety Note")
     lines.append("")
-    lines.append("AegisLoop Guardian is a defensive scanner. It does not execute files, delete files, or contact external systems.")
+    lines.append("AegisLoop Guardian is a defensive scanner. It does not execute or delete scanned files. External LLM providers are contacted only when the user explicitly enables remote explanation.")
 
     markdown_path.write_text("\n".join(lines), encoding="utf-8")
 
