@@ -1,7 +1,11 @@
 from pathlib import Path
 from typing import List, Dict, Any, Optional
 from datetime import datetime
+import html
 from alert_manager import build_recommendations
+
+def _md_text(value: Any) -> str:
+    return html.escape(str(value), quote=False).replace("`", "\\`")
 
 def generate_report(
     findings: List[Dict[str, Any]],
@@ -38,13 +42,13 @@ def generate_report(
     lines.append("")
     if findings:
         for item in findings:
-            lines.append(f"### {item['rule_id']} - {item['label']}")
+            lines.append(f"### {_md_text(item['rule_id'])} - {_md_text(item['label'])}")
             lines.append("")
-            lines.append(f"- File: `{item['file']}`")
-            lines.append(f"- Severity: {item['severity']}")
-            lines.append(f"- Category: {item['category']}")
-            lines.append(f"- Matched pattern: `{item['matched_pattern']}`")
-            lines.append(f"- Reason: {item['reason']}")
+            lines.append(f"- File: `{_md_text(item['file'])}`")
+            lines.append(f"- Severity: {_md_text(item['severity'])}")
+            lines.append(f"- Category: {_md_text(item['category'])}")
+            lines.append(f"- Matched pattern: `{_md_text(item['matched_pattern'])}`")
+            lines.append(f"- Reason: {_md_text(item['reason'])}")
             lines.append("")
     else:
         lines.append("No suspicious patterns were detected.")
@@ -59,14 +63,16 @@ def generate_report(
     lines.append("")
 
     if llm_explanation:
-        lines.append("## Optional Local LLM Explanation")
+        lines.append("## Optional LLM Explanation")
         lines.append("")
-        lines.append(llm_explanation)
+        lines.append("> Security note: model-generated explanation is untrusted advisory text. Do not execute commands from it automatically.")
+        lines.append("")
+        lines.append(_md_text(llm_explanation))
         lines.append("")
 
     lines.append("## Safety Note")
     lines.append("")
-    lines.append("AegisLoop Guardian is a defensive scanner. It does not execute files, delete files, or contact external systems.")
+    lines.append("AegisLoop Guardian is a defensive scanner. It does not execute or delete scanned files. External LLM providers are contacted only when the user explicitly enables remote explanation.")
 
     markdown_path.write_text("\n".join(lines), encoding="utf-8")
 

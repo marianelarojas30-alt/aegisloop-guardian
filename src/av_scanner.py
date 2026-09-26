@@ -1,6 +1,7 @@
 from pathlib import Path
 from typing import Dict, Any, List
 import json
+from functools import lru_cache
 
 from hash_utils import hash_file
 from entropy_analyzer import analyze_entropy
@@ -10,6 +11,7 @@ from clamav_adapter import scan_with_clamav
 ROOT = Path(__file__).resolve().parents[1]
 HASH_DENYLIST = ROOT / "hashes" / "known_bad_hashes.json"
 
+@lru_cache(maxsize=1)
 def _load_hash_denylist() -> Dict[str, Any]:
     try:
         return json.loads(HASH_DENYLIST.read_text(encoding="utf-8"))
