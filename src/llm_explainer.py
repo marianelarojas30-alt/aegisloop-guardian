@@ -193,12 +193,15 @@ def _explain_with_gemini(prompt: str, model: str) -> str:
     if not api_key:
         return "Gemini explanation unavailable: GEMINI_API_KEY is not set."
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
     try:
         response = requests.post(
             url,
-            headers={"content-type": "application/json"},
+            headers={
+                "content-type": "application/json",
+                "x-goog-api-key": api_key,
+            },
             json={
                 "contents": [
                     {
