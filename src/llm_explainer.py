@@ -1,7 +1,16 @@
 from typing import List, Dict, Any, Optional
+from pathlib import Path
+from urllib.parse import urlparse
 import json
 import os
 import requests
+
+DEFAULT_MODELS = {
+    "ollama": "qwen3.5:4b",
+    "anthropic": "claude-haiku-4-5-20251001",
+    "openai": "gpt-6-luna",
+    "gemini": "gemini-3.8-flash",
+}
 
 def _build_prompt(findings: List[Dict[str, Any]]) -> str:
     compact = [
@@ -12,7 +21,7 @@ def _build_prompt(findings: List[Dict[str, Any]]) -> str:
             "category": f.get("category"),
             "reason": f.get("reason"),
             "matched_pattern": f.get("matched_pattern"),
-            "file": f.get("file")
+            "file": Path(str(f.get("file") or "")).name
         }
         for f in findings[:25]
     ]
@@ -64,28 +73,30 @@ def explain_findings(
     prompt = _build_prompt(findings)
 
     if provider == "ollama":
-        return _explain_with_ollama(prompt, model or "qwen2.5:7b")
+        return _explain_with_ollama(prompt, model or DEFAULT_MODELS["ollama"])
 
     if provider == "anthropic":
-        return _explain_with_anthropic(prompt, model or "claude-3-5-haiku-latest")
+        return _explain_with_anthropic(prompt, model or DEFAULT_MODELS["anthropic"])
 
     if provider == "openai":
         return _explain_with_openai_compatible(
             prompt,
-            model or "gpt-4o-mini",
+            model or DEFAULT_MODELS["openai"],
             openai_base_url or "https://api.openai.com/v1/chat/completions"
         )
 
     if provider == "gemini":
-        return _explain_with_gemini(prompt, model or "gemini-1.5-flash")
+        return _explain_with_gemini(prompt, model or DEFAULT_MODELS["gemini"])
 
     return f"Unsupported explanation provider: {provider}"
 
 
 def _explain_with_ollama(prompt: str, model: str) -> str:
     try:
-        response = requests.post(
-            "http://localhost:11434/api/generate",
+        session = requests.Session()
+        session.trust_env = False
+        response = session.post(
+            "http://127.0.0.1:11434/api/generate",
             json={
                 "model": model,
                 "prompt": prompt,
@@ -139,23 +150,35 @@ def _explain_with_openai_compatible(prompt: str, model: str, base_url: str) -> s
         headers["authorization"] = f"Bearer {api_key}"
 
     try:
-        response = requests.post(
+        session = requests.Session()
+        try:
+            host = (urlparse(base_url).hostname or "").lower()
+        except ValueError:
+            host = ""
+        if host in {"127.0.0.1", "localhost", "::1"}:
+            session.trust_env = False
+        payload = {
+            "model": model,
+            "messages": [
+                {
+                    "role": "system",
+                    "content": "You are a defensive cybersecurity assistant. Do not provide offensive instructions."
+                },
+                {
+                    "role": "user",
+                    "content": prompt
+                }
+            ],
+        }
+        if model.lower().startswith("gpt-6"):
+            payload["reasoning_effort"] = "none"
+        else:
+            payload["temperature"] = 0
+
+        response = session.post(
             base_url,
             headers=headers,
-            json={
-                "model": model,
-                "temperature": 0,
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "You are a defensive cybersecurity assistant. Do not provide offensive instructions."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-            },
+            json=payload,
             timeout=180
         )
         response.raise_for_status()
@@ -170,12 +193,15 @@ def _explain_with_gemini(prompt: str, model: str) -> str:
     if not api_key:
         return "Gemini explanation unavailable: GEMINI_API_KEY is not set."
 
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={api_key}"
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
     try:
         response = requests.post(
             url,
-            headers={"content-type": "application/json"},
+            headers={
+                "content-type": "application/json",
+                "x-goog-api-key": api_key,
+            },
             json={
                 "contents": [
                     {

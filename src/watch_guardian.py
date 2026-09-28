@@ -11,7 +11,7 @@ def main():
     parser.add_argument("--interval", type=int, default=5, help="Seconds between checks.")
     parser.add_argument("--max-size-kb", type=int, default=512)
     parser.add_argument("--explain-provider", default="none", choices=["none", "ollama", "anthropic", "openai", "gemini"])
-    parser.add_argument("--model", default="qwen2.5:7b")
+    parser.add_argument("--model", default=None, help="Optional model override; provider default is used when omitted.")
     parser.add_argument("--openai-base-url", default=None)
     parser.add_argument("--enable-av-checks", action="store_true")
     parser.add_argument("--use-clamav", action="store_true")
@@ -45,7 +45,8 @@ def main():
                         enable_av_checks=args.enable_av_checks,
                         use_clamav=args.use_clamav,
                         quarantine=args.quarantine,
-                        compare_baseline=args.compare_baseline
+                        compare_baseline=args.compare_baseline,
+                        files_override=files
                     )
                     print(f"Risk level: {result['score']['risk_level']} | Findings: {result['score']['finding_count']}")
                     previous = current

@@ -14,7 +14,7 @@ AegisLoop Guardian is a defensive prototype that implements practical antivirus-
 
 ## What it can do
 
-AegisLoop Guardian v5 includes:
+AegisLoop Guardian v0.7 includes:
 
 - static file scanning
 - IOC extraction: URLs, domains, IPs, emails, crypto wallets
@@ -122,15 +122,15 @@ python src/watch_guardian.py --path watched_folder --interval 5 --enable-av-chec
 ## Optional local Ollama explanation
 
 ```bash
-ollama pull qwen2.5:7b
-python src/guardian.py --path tests/safe_test_files --enable-av-checks --explain-provider ollama --model qwen2.5:7b
+ollama pull qwen3.5:4b
+python src/guardian.py --path tests/safe_test_files --enable-av-checks --explain-provider ollama --model qwen3.5:4b
 ```
 
 ## Optional Claude explanation
 
 ```bash
 export ANTHROPIC_API_KEY="your_key_here"
-python src/guardian.py --path tests/safe_test_files --enable-av-checks --explain-provider anthropic --model claude-3-5-haiku-latest
+python src/guardian.py --path tests/safe_test_files --enable-av-checks --explain-provider anthropic
 ```
 
 ## Reports
@@ -214,3 +214,15 @@ AegisLoop Guardian explores whether a transparent local defensive agent can comb
 ## Status
 
 Stronger defensive prototype. Use only on files and folders you own or are authorized to inspect.
+
+
+## Current provider defaults
+
+If `--model` is omitted, AegisLoop uses provider-specific defaults:
+
+- Ollama: `qwen3.5:4b`
+- Anthropic: `claude-haiku-4-5-20251001`
+- OpenAI: `gpt-6-luna`
+- Gemini: `gemini-3.8-flash`
+
+Remote providers remain opt-in through `--allow-remote-llm`.
