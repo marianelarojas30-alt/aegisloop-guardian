@@ -1,3 +1,4 @@
-PyYAML>=6.0.1
-requests>=2.31.0
+PyYAML>=6.0.2
+requests>=2.32.4
 python-magic-bin; platform_system == 'Windows'
+urllib3>=2.8.0  # pulled in by requests; floor past the 2025-2026 CVEs
