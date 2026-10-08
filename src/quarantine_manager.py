@@ -18,10 +18,27 @@ def quarantine_flagged_files(findings: List[Dict[str, Any]], quarantine_dir: Pat
 
     for finding in findings:
         file_path = Path(finding.get("file", ""))
-        if not file_path.exists() or file_path in seen:
+        if file_path in seen:
             continue
 
         seen.add(file_path)
+
+        # Never follow symlinks into unrelated parts of the host filesystem.
+        if file_path.is_symlink():
+            copied.append({
+                "source": str(file_path),
+                "quarantine_copy": None,
+                "status": "skipped_symlink"
+            })
+            continue
+
+        if not file_path.exists() or not file_path.is_file():
+            copied.append({
+                "source": str(file_path),
+                "quarantine_copy": None,
+                "status": "skipped_not_regular_file"
+            })
+            continue
         stamp = int(time.time())
         safe_name = f"{stamp}_{file_path.name}"
         dest = quarantine_dir / safe_name

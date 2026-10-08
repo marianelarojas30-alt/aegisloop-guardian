@@ -23,5 +23,5 @@ behavior:
 explanation:
   enabled: false
   provider: none   # none | ollama | anthropic | openai | gemini
-  model: qwen2.5:7b
+  model: null  # provider-specific default unless explicitly overridden
   openai_base_url: null
