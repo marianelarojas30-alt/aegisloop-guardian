@@ -12,6 +12,36 @@ DEFAULT_MODELS = {
     "gemini": "gemini-3.8-flash",
 }
 
+_LOOPBACK_HOSTS = {"127.0.0.1", "localhost", "::1"}
+DEFAULT_OPENAI_URL = "https://api.openai.com/v1/chat/completions"
+
+REMOTE_CONSENT_MESSAGE = (
+    "Remote LLM explanation is blocked by default because findings may leave this computer. "
+    "Use --allow-remote-llm only if you intentionally consent to sending the compact finding data "
+    "to the selected provider."
+)
+
+
+def is_remote_provider(provider: str, openai_base_url: Optional[str] = None) -> bool:
+    """
+    True when explaining with ``provider`` would send finding data off this computer.
+
+    Ollama and an OpenAI-compatible endpoint on a loopback host stay local; hosted
+    providers, any other OpenAI-compatible host, and unparsable URLs count as remote.
+    This is the single definition every caller uses.
+    """
+    provider = (provider or "none").lower().strip()
+    if provider in {"anthropic", "gemini"}:
+        return True
+    if provider == "openai":
+        try:
+            host = (urlparse(openai_base_url or DEFAULT_OPENAI_URL).hostname or "").lower()
+        except ValueError:
+            return True
+        return host not in _LOOPBACK_HOSTS
+    return False
+
+
 def _build_prompt(findings: List[Dict[str, Any]]) -> str:
     compact = [
         {
@@ -48,9 +78,14 @@ def explain_findings(
     provider: str = "none",
     model: Optional[str] = None,
     openai_base_url: Optional[str] = None,
+    allow_remote: bool = False,
 ) -> str:
     """
     Provider-agnostic optional explanation layer.
+
+    Finding data is only sent to a remote provider when ``allow_remote`` is true;
+    otherwise this raises ``ValueError`` before any network call. The check lives
+    here, where the data leaves the machine, so no caller can skip it.
 
     The scanner does not require an LLM.
     Use provider='none' for pure local rule-based scanning.
@@ -70,6 +105,9 @@ def explain_findings(
     if provider == "none":
         return ""
 
+    if is_remote_provider(provider, openai_base_url) and not allow_remote:
+        raise ValueError(REMOTE_CONSENT_MESSAGE)
+
     prompt = _build_prompt(findings)
 
     if provider == "ollama":
@@ -82,7 +120,7 @@ def explain_findings(
         return _explain_with_openai_compatible(
             prompt,
             model or DEFAULT_MODELS["openai"],
-            openai_base_url or "https://api.openai.com/v1/chat/completions"
+            openai_base_url or DEFAULT_OPENAI_URL
         )
 
     if provider == "gemini":
@@ -151,11 +189,7 @@ def _explain_with_openai_compatible(prompt: str, model: str, base_url: str) -> s
 
     try:
         session = requests.Session()
-        try:
-            host = (urlparse(base_url).hostname or "").lower()
-        except ValueError:
-            host = ""
-        if host in {"127.0.0.1", "localhost", "::1"}:
+        if not is_remote_provider("openai", base_url):
             session.trust_env = False
         payload = {
             "model": model,

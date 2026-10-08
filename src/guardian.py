@@ -1,7 +1,6 @@
 import argparse
 import json
 from pathlib import Path
-from urllib.parse import urlparse
 
 from file_collector import collect_files
 from static_scanner import scan_file
@@ -13,7 +12,7 @@ from csv_exporter import export_findings_csv
 from risk_scorer import score_findings
 from rule_updater import save_regression_case, propose_rules_from_repeated_findings
 from report_generator import generate_report
-from llm_explainer import explain_findings
+from llm_explainer import REMOTE_CONSENT_MESSAGE, explain_findings, is_remote_provider
 
 ROOT = Path(__file__).resolve().parents[1]
 RULES_DIR = ROOT / "rules"
@@ -34,22 +33,12 @@ def load_rules():
         all_rules.extend(data.get("patterns", []))
     return all_rules
 
-def _remote_explanation_requested(provider: str, openai_base_url: str | None) -> bool:
-    provider = (provider or "none").lower().strip()
-    if provider in {"anthropic", "gemini"}:
-        return True
-    if provider == "openai":
-        endpoint = openai_base_url or "https://api.openai.com"
-        try:
-            parsed = urlparse(endpoint)
-        except ValueError:
-            return True
-        host = (parsed.hostname or "").lower()
-        return host not in {"127.0.0.1", "localhost", "::1"}
-    return False
-
-
 def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", model: str | None = None, openai_base_url: str = None, enable_av_checks: bool = False, use_clamav: bool = False, quarantine: bool = False, build_baseline_flag: bool = False, compare_baseline: bool = False, allow_remote_llm: bool = False, files_override=None):
+    # Refuse before scanning, so a missing consent never leaves quarantine copies,
+    # baselines or regression memory behind.
+    if is_remote_provider(explain_provider, openai_base_url) and not allow_remote_llm:
+        raise ValueError(REMOTE_CONSENT_MESSAGE)
+
     target = Path(path)
     if not target.is_absolute():
         target = ROOT / target
@@ -77,19 +66,13 @@ def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", 
         quarantine_results = quarantine_flagged_files(findings, ROOT / "quarantine")
 
     llm_explanation = None
-    if _remote_explanation_requested(explain_provider, openai_base_url) and not allow_remote_llm:
-        raise ValueError(
-            "Remote LLM explanation is blocked by default because findings may leave this computer. "
-            "Use --allow-remote-llm only if you intentionally consent to sending the compact finding data "
-            "to the selected provider."
-        )
-
     if explain_provider and explain_provider != "none" and findings:
         llm_explanation = explain_findings(
             findings,
             provider=explain_provider,
             model=model,
-            openai_base_url=openai_base_url
+            openai_base_url=openai_base_url,
+            allow_remote=allow_remote_llm,
         )
 
     markdown_path = REPORTS_DIR / "latest_guardian_report.md"

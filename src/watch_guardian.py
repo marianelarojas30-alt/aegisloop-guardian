@@ -4,6 +4,7 @@ from pathlib import Path
 
 from file_collector import collect_files, folder_fingerprint
 from guardian import run_scan, ROOT
+from llm_explainer import REMOTE_CONSENT_MESSAGE, is_remote_provider
 
 def main():
     parser = argparse.ArgumentParser(description="Continuously watch a folder and run AegisLoop Guardian when files change.")
@@ -17,7 +18,11 @@ def main():
     parser.add_argument("--use-clamav", action="store_true")
     parser.add_argument("--quarantine", action="store_true")
     parser.add_argument("--compare-baseline", action="store_true")
+    parser.add_argument("--allow-remote-llm", action="store_true",
+                        help="Explicitly allow finding summaries to be sent to a remote LLM provider.")
     args = parser.parse_args()
+    if is_remote_provider(args.explain_provider, args.openai_base_url) and not args.allow_remote_llm:
+        parser.error(REMOTE_CONSENT_MESSAGE)
 
     target = Path(args.path)
     if not target.is_absolute():
@@ -46,6 +51,7 @@ def main():
                         use_clamav=args.use_clamav,
                         quarantine=args.quarantine,
                         compare_baseline=args.compare_baseline,
+                        allow_remote_llm=args.allow_remote_llm,
                         files_override=files
                     )
                     print(f"Risk level: {result['score']['risk_level']} | Findings: {result['score']['finding_count']}")
