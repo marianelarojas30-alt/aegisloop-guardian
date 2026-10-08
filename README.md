@@ -226,3 +226,7 @@ If `--model` is omitted, AegisLoop uses provider-specific defaults:
 - Gemini: `gemini-3.8-flash`
 
 Remote providers remain opt-in through `--allow-remote-llm`.
+
+## License
+
+Free for **noncommercial use** under the [PolyForm Noncommercial License 1.0.0](LICENSE). Selling it, charging for it, or any commercial use requires a separate written commercial license from the author, Marianela Bourgault (contact through GitHub). Copies and modified versions must keep the copyright notice.

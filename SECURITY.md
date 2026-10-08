@@ -36,6 +36,12 @@ Do not execute code from forks, pull requests, downloaded archives, model-genera
 
 Deletion, privilege changes, firewall changes, remote access changes, credential changes, and destructive Git operations require explicit operator intent.
 
-## Vulnerability reporting
+## Reporting a vulnerability
 
-Do not publish exploitable secrets or private user data in a public issue. Report security problems with the minimum information required to reproduce them safely.
+Please report vulnerabilities privately through GitHub: open the **Security** tab of this repository and choose **Report a vulnerability**. Do not open a public issue for security problems.
+
+You will get an answer as soon as possible. Please allow time for a fix before any public disclosure.
+
+## Scope
+
+This project is defensive security tooling meant to run locally against systems you own or are authorized to test. Reports about the tool itself (unsafe file handling, command execution, secret exposure, unsafe dependencies) are in scope.
