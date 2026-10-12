@@ -141,8 +141,11 @@ def _explain_with_ollama(prompt: str, model: str) -> str:
                 "stream": False,
                 "options": {"temperature": 0.0}
             },
-            timeout=180
+            timeout=180,
+            allow_redirects=False
         )
+        if 300 <= response.status_code < 400:
+            raise ValueError("Provider redirects are not allowed")
         response.raise_for_status()
         return response.json().get("response", "")
     except Exception as exc:
@@ -170,8 +173,11 @@ def _explain_with_anthropic(prompt: str, model: str) -> str:
                     {"role": "user", "content": prompt}
                 ],
             },
-            timeout=180
+            timeout=180,
+            allow_redirects=False
         )
+        if 300 <= response.status_code < 400:
+            raise ValueError("Provider redirects are not allowed")
         response.raise_for_status()
         data = response.json()
         parts = data.get("content", [])
@@ -182,7 +188,12 @@ def _explain_with_anthropic(prompt: str, model: str) -> str:
 
 
 def _explain_with_openai_compatible(prompt: str, model: str, base_url: str) -> str:
-    api_key = os.getenv("OPENAI_API_KEY", "")
+    # A cloud credential belongs only to its official HTTPS origin. A local or
+    # third-party compatible server must use a separately configured credential.
+    parsed = urlparse(base_url)
+    official = (parsed.scheme == "https" and parsed.netloc.lower() in
+                {"api.openai.com", "api.openai.com:443"})
+    api_key = os.getenv("OPENAI_API_KEY" if official else "OPENAI_COMPATIBLE_API_KEY", "")
     headers = {"content-type": "application/json"}
     if api_key:
         headers["authorization"] = f"Bearer {api_key}"
@@ -213,8 +224,11 @@ def _explain_with_openai_compatible(prompt: str, model: str, base_url: str) -> s
             base_url,
             headers=headers,
             json=payload,
-            timeout=180
+            timeout=180,
+            allow_redirects=False
         )
+        if 300 <= response.status_code < 400:
+            raise ValueError("Provider redirects are not allowed")
         response.raise_for_status()
         data = response.json()
         return data["choices"][0]["message"]["content"].strip()
@@ -248,8 +262,11 @@ def _explain_with_gemini(prompt: str, model: str) -> str:
                     "temperature": 0
                 }
             },
-            timeout=180
+            timeout=180,
+            allow_redirects=False
         )
+        if 300 <= response.status_code < 400:
+            raise ValueError("Provider redirects are not allowed")
         response.raise_for_status()
         data = response.json()
         candidates = data.get("candidates", [])

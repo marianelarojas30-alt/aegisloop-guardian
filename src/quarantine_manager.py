@@ -1,73 +1,68 @@
 from pathlib import Path
 from typing import List, Dict, Any
-import shutil
-import time
 import json
+import os
+import shutil
+import stat
+import tempfile
+
 
 def quarantine_flagged_files(findings: List[Dict[str, Any]], quarantine_dir: Path) -> List[Dict[str, Any]]:
-    """
-    Safe quarantine-by-copy.
+    """Copy evidence into private, exclusive files; never replace the source.
 
-    This does not delete or move the original file.
-    It copies flagged files into quarantine for manual review.
+    Random destination names prevent same-name collisions and planted destination
+    symlinks. The manifest is atomically replaced, never opened for writing through
+    an existing link. Quarantine is for a trusted user-controlled local directory.
     """
-    quarantine_dir.mkdir(parents=True, exist_ok=True)
-
+    if quarantine_dir.is_symlink():
+        raise ValueError("quarantine directory must not be a symlink")
+    quarantine_dir.mkdir(parents=True, exist_ok=True, mode=0o700)
     copied = []
     seen = set()
-
     for finding in findings:
         file_path = Path(finding.get("file", ""))
         if file_path in seen:
             continue
-
         seen.add(file_path)
-
-        # Never follow symlinks into unrelated parts of the host filesystem.
+        record = {"source": str(file_path), "quarantine_copy": None}
         if file_path.is_symlink():
-            copied.append({
-                "source": str(file_path),
-                "quarantine_copy": None,
-                "status": "skipped_symlink"
-            })
+            copied.append({**record, "status": "skipped_symlink"})
             continue
-
-        if not file_path.exists() or not file_path.is_file():
-            copied.append({
-                "source": str(file_path),
-                "quarantine_copy": None,
-                "status": "skipped_not_regular_file"
-            })
-            continue
-        stamp = int(time.time())
-        safe_name = f"{stamp}_{file_path.name}"
-        dest = quarantine_dir / safe_name
-
+        dest = None
         try:
-            shutil.copy2(file_path, dest)
-            copied.append({
-                "source": str(file_path),
-                "quarantine_copy": str(dest),
-                "status": "copied"
-            })
-        except Exception as exc:
-            copied.append({
-                "source": str(file_path),
-                "quarantine_copy": None,
-                "status": f"copy_failed: {exc}"
-            })
+            flags = os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0) | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0)
+            with os.fdopen(os.open(file_path, flags), "rb") as source:
+                if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+                    copied.append({**record, "status": "skipped_not_regular_file"})
+                    continue
+                fd, name = tempfile.mkstemp(prefix="evidence-", suffix=".quarantine", dir=quarantine_dir)
+                dest = Path(name)
+                with os.fdopen(fd, "wb") as target:
+                    shutil.copyfileobj(source, target)
+                    target.flush()
+                    os.fsync(target.fileno())
+            copied.append({**record, "quarantine_copy": str(dest), "status": "copied"})
+        except OSError as exc:
+            if dest is not None:
+                dest.unlink(missing_ok=True)
+            copied.append({**record, "status": f"copy_failed: {exc}"})
 
     manifest_path = quarantine_dir / "quarantine_manifest.json"
+    existing = []
+    if not manifest_path.is_symlink() and manifest_path.is_file():
+        try:
+            loaded = json.loads(manifest_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, list):
+                existing = loaded
+        except (OSError, ValueError):
+            pass
+    fd, name = tempfile.mkstemp(prefix=".manifest-", suffix=".tmp", dir=quarantine_dir)
     try:
-        if manifest_path.exists():
-            existing = json.loads(manifest_path.read_text(encoding="utf-8"))
-            if not isinstance(existing, list):
-                existing = []
-        else:
-            existing = []
-        existing.extend(copied)
-        manifest_path.write_text(json.dumps(existing, indent=2), encoding="utf-8")
-    except Exception:
-        pass
-
+        with os.fdopen(fd, "w", encoding="utf-8") as manifest:
+            json.dump(existing + copied, manifest, indent=2)
+            manifest.flush()
+            os.fsync(manifest.fileno())
+        os.replace(name, manifest_path)
+    finally:
+        Path(name).unlink(missing_ok=True)
     return copied

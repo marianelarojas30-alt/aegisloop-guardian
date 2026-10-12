@@ -230,3 +230,15 @@ Remote providers remain opt-in through `--allow-remote-llm`.
 ## License
 
 Free for **noncommercial use** under the [PolyForm Noncommercial License 1.0.0](LICENSE). Selling it, charging for it, or any commercial use requires a separate written commercial license from the author, Marianela Bourgault (contact through GitHub). Copies and modified versions must keep the copyright notice.
+
+
+### Local transport and quarantine boundaries
+
+LLM requests refuse HTTP redirects. Local providers bypass environment proxies.
+`OPENAI_API_KEY` is sent only to the official HTTPS `api.openai.com` origin; use a
+separate `OPENAI_COMPATIBLE_API_KEY` for an intentionally configured compatible
+endpoint. Remote explanation still requires explicit consent.
+
+Quarantine copies use unique, private `.quarantine` files and retain the original
+filename in the manifest. They do not inherit executable permissions. CSV exports
+prefix spreadsheet formula-like fields with an apostrophe; JSON preserves raw data.

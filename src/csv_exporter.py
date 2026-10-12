@@ -2,6 +2,12 @@ from pathlib import Path
 from typing import List, Dict, Any
 import csv
 
+def _safe_cell(value: Any) -> Any:
+    if isinstance(value, str) and value.lstrip().startswith(("=", "+", "-", "@")):
+        return "'" + value
+    return value
+
+
 def export_findings_csv(findings: List[Dict[str, Any]], output_path: Path) -> None:
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -11,4 +17,4 @@ def export_findings_csv(findings: List[Dict[str, Any]], output_path: Path) -> No
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         for item in findings:
-            writer.writerow({key: item.get(key, "") for key in fieldnames})
+            writer.writerow({key: _safe_cell(item.get(key, "")) for key in fieldnames})
