@@ -95,6 +95,10 @@ python src/guardian.py --path watched_folder --enable-av-checks --build-baseline
 python src/guardian.py --path watched_folder --enable-av-checks --compare-baseline
 ```
 
+Comparison requires a readable baseline. If both baseline flags are set, the scan
+compares against the previous inventory before replacing it with the current one.
+A failed comparison leaves the previous inventory in place.
+
 ## Optional ClamAV scan
 
 Install ClamAV separately, then run:
