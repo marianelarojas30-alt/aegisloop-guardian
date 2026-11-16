@@ -7,7 +7,7 @@ from static_scanner import scan_file
 from av_scanner import av_style_scan_file
 from quarantine_manager import quarantine_flagged_files
 from file_name_analyzer import analyze_filename
-from baseline_manager import build_baseline, compare_to_baseline
+from baseline_manager import BaselineError, build_baseline, compare_to_baseline
 from csv_exporter import export_findings_csv
 from risk_scorer import score_findings
 from rule_updater import save_regression_case, propose_rules_from_repeated_findings
@@ -53,11 +53,11 @@ def run_scan(path: str, max_size_kb: int = 512, explain_provider: str = "none", 
         if enable_av_checks:
             findings.extend(av_style_scan_file(file_path, use_clamav=use_clamav))
 
-    if build_baseline_flag:
-        build_baseline(files)
-
     if compare_baseline:
         findings.extend(compare_to_baseline(files))
+
+    if build_baseline_flag:
+        build_baseline(files)
 
     score = score_findings(findings)
 
@@ -113,19 +113,22 @@ def main():
     parser.add_argument("--compare-baseline", action="store_true", help="Compare current files against the existing baseline.")
     args = parser.parse_args()
 
-    result = run_scan(
-        path=args.path,
-        max_size_kb=args.max_size_kb,
-        explain_provider=args.explain_provider,
-        model=args.model,
-        openai_base_url=args.openai_base_url,
-        enable_av_checks=args.enable_av_checks,
-        use_clamav=args.use_clamav,
-        quarantine=args.quarantine,
-        build_baseline_flag=args.build_baseline,
-        compare_baseline=args.compare_baseline,
-        allow_remote_llm=args.allow_remote_llm
-    )
+    try:
+        result = run_scan(
+            path=args.path,
+            max_size_kb=args.max_size_kb,
+            explain_provider=args.explain_provider,
+            model=args.model,
+            openai_base_url=args.openai_base_url,
+            enable_av_checks=args.enable_av_checks,
+            use_clamav=args.use_clamav,
+            quarantine=args.quarantine,
+            build_baseline_flag=args.build_baseline,
+            compare_baseline=args.compare_baseline,
+            allow_remote_llm=args.allow_remote_llm
+        )
+    except BaselineError as exc:
+        parser.exit(1, f"{parser.prog}: {exc}\n")
 
     print("AegisLoop Guardian scan complete.")
     print(f"Files scanned: {result['files_scanned']}")
